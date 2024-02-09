@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: centos-8
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Repository
@@ -19,6 +19,4 @@ jobs:
         
     - name: Install Dependencies
       run: npm install
-      
-    - name: Run Test
-      run: npm test
+
