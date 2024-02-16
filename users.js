@@ -2,7 +2,7 @@ const { Sequelize, DataTypes } = require('sequelize');
 const bcrypt = require('bcrypt');
 
 const sequelize = new Sequelize(
-    process.env.DB_NAME || 'csye6225',
+    process.env.DB_NAME || 'test_db',
     process.env.DB_USER || 'root',
     process.env.DB_PASSWORD || 'root',
     {
