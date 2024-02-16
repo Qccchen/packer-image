@@ -81,11 +81,18 @@ app.get('/v1/user/self', verifyToken, async (req, res) => {
 app.put('/v1/user/self', verifyToken, async (req, res) => {
     try {
         const { first_name, last_name, password, username } = req.body;
+
+        const existingUser = await Users.findOne({ where: { username } });
+
+        if (!existingUser) {
+            return res.status(400).json({ error: 'User not found' });
+        }
+
         try { 
             await Users.update({ first_name: first_name, last_name: last_name, password: password }, { where: { username: username } })
             res.status(204).end();
         } catch (err) {
-            res.status(400).json({ error: 'User not found or invalid update data' });
+            res.status(400).json({ error: 'Invalid update data' });
         }        
     } catch (err) {
         res.status(500).json({ error: 'Invalid request' });
@@ -96,3 +103,5 @@ app.put('/v1/user/self', verifyToken, async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+module.exports = app;

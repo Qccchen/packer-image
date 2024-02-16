@@ -2,9 +2,9 @@ const { Sequelize, DataTypes } = require('sequelize');
 const bcrypt = require('bcrypt');
 
 const sequelize = new Sequelize(
-    'csye6225',
+    'test_db',
     'root',
-    'root',
+    '99chenqian99',
     {
         host: 'localhost',
         dialect: 'mysql',
