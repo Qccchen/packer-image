@@ -28,8 +28,15 @@ jobs:
     - name: Setup MySQL
       run: |
         sudo /etc/init.d/mysql start
-        mysql -e 'CREATE DATABASE csye6225;' -uroot -proot
+        mysql -e 'CREATE DATABASE test_db;' -uroot -proot
 
+    - name: Run Server
+      run: |
+        npm start &
+        SERVER_PID=$!
+        sleep 10
+        kill $SERVER_PID
+      
     - name: Run Tests
       run: npm test
 
