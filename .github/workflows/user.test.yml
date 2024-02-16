@@ -30,12 +30,8 @@ jobs:
         sudo /etc/init.d/mysql start
         mysql -e 'CREATE DATABASE test_db;' -uroot -proot
 
-    - name: Run Server
-      run: |
-        npm start &
-        SERVER_PID=$!
-        sleep 10
-        kill $SERVER_PID
+    - name: Init MySQL
+      run: node users.js
       
     - name: Run Tests
       run: npm test
