@@ -28,7 +28,7 @@ jobs:
     - name: Setup MySQL
       run: |
         sudo /etc/init.d/mysql start
-        mysql -e 'CREATE DATABASE test_db;' -u root -proot
+        mysql -e 'CREATE DATABASE test_db;' -uroot -proot
 
     - name: Run Tests
       run: npm test
