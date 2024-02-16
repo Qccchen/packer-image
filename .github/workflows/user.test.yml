@@ -1,4 +1,4 @@
-name: Node.js CI
+name: user.test CI
 
 on:
   pull_request:
@@ -7,6 +7,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    env:
+      DB_DATABASE: test_db
+      DB_USER: root
+      DB_PASSWORD: root
 
     steps:
     - name: Checkout Repository
@@ -20,6 +25,11 @@ jobs:
     - name: Install Dependencies
       run: npm install
 
-    # - name: Run Fail Test
-    #   run: exit 1
+    - name: Setup MySQL
+      run: |
+        sudo /etc/init.d/mysql start
+        mysql -e 'CREATE DATABASE csye6225;' -uroot -proot
+
+    - name: Run Tests
+      run: npm test
 
