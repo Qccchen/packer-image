@@ -25,6 +25,9 @@ jobs:
     - name: Install Dependencies
       run: npm install
 
+    - name: Start server
+      run: npm start
+        
     - name: Setup MySQL
       run: |
         sudo /etc/init.d/mysql start
