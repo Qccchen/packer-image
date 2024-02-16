@@ -8,7 +8,7 @@ const sequelize = new Sequelize(
     {
         host: process.env.DB_HOST || 'localhost',
         dialect: 'mysql',
-    }
+    } 
 );
 
 const Users = sequelize.define('users', {
