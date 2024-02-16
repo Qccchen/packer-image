@@ -2,13 +2,13 @@ const { Sequelize, DataTypes } = require('sequelize');
 const bcrypt = require('bcrypt');
 
 const sequelize = new Sequelize(
-    'test_db',
-    'root',
-    '99chenqian99',
+    process.env.DB_DATABASE || 'test_db',
+    process.env.DB_USER || 'root',
+    process.env.DB_PASSWORD || 'root',
     {
-        host: 'localhost',
+        host: process.env.DB_HOST || 'localhost',
         dialect: 'mysql',
-    }
+    } 
 );
 
 const Users = sequelize.define('users', {
@@ -41,5 +41,7 @@ const Users = sequelize.define('users', {
         allowNull: false,
     }
 });
+
+sequelize.sync();
 
 module.exports = { Users, sequelize };
