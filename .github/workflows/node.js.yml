@@ -9,13 +9,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: test fail
-      uses: exit 1
+    - name: Checkout Repository
+      uses: actions/checkout@v3
       
+    - name: Use Node.js 
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install Dependencies
+      run: npm install
 
     # - name: Run Fail Test
     #   run: exit 1
 
-    # - name: Run Fail Test
-    #   run: exit 1
 
