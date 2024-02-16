@@ -2,11 +2,11 @@ const { Sequelize, DataTypes } = require('sequelize');
 const bcrypt = require('bcrypt');
 
 const sequelize = new Sequelize(
-    'test_db',
-    'root',
-    'root',
+    process.env.DB_DATABASE || 'test_db',
+    process.env.DB_USER || 'root',
+    process.env.DB_PASSWORD || 'root',
     {
-        host: 'localhost',
+        host: process.env.DB_HOST || 'localhost',
         dialect: 'mysql',
     }
 );
