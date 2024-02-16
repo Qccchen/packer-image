@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const sequelize = new Sequelize(
     'test_db',
     'root',
-    '99chenqian99',
+    'root',
     {
         host: 'localhost',
         dialect: 'mysql',
