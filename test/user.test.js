@@ -41,6 +41,6 @@ describe ('Integration tests for /v1/user endpoint', () => {
             .set('Authorization', authToken) 
             .expect(200);
             
-        expect(updatedResponse.body.first_name).to.equal('Updated');
+        expect(updatedResponse.body.first_name).to.equal('UpdatedDemo');
     });
 });
