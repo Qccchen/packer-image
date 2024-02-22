@@ -18,7 +18,7 @@ jobs:
           version: '1.10.0'
 
       - name: Packer fmt
-        run: packer fmt -check *.pkr.hcl
+        run: packer fmt -check -diff *.pkr.hcl
 
       - name: Packer validate
         run: packer validate *.pkr.hcl
