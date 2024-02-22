@@ -17,6 +17,9 @@ jobs:
         with:
           version: '1.10.0'
 
+      - name: Packer init
+        run: packer init *.pkr.hcl    
+
       - name: Packer fmt
         run: packer fmt -check -diff *.pkr.hcl
 
