@@ -8,7 +8,7 @@ on:
 jobs:
   integration-test:
     runs-on: ubuntu-latest
-    if: github.event.pull request.merged == true
+    if: github.event.pull_request.merged == true
 
     env:
       DB_HOST: 127.0.0.1
