@@ -71,7 +71,7 @@ jobs:
       - name: Setup Packer
         uses: hashicorp/setup-packer@v3.0.0
         with:
-          packer-version: '1.10.0'
+          version: '1.10.0'
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
