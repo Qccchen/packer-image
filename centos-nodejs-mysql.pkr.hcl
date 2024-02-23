@@ -36,27 +36,27 @@ build {
   }
 
   provisioner "file" {
-    source      = "${var.artifact_path}/server.js"
+    source      = "server.js"
     destination = "/tmp/webapp/server.js"
   }
 
   provisioner "file" {
-    source      = "${var.artifact_path}/users.js"
+    source      = "users.js"
     destination = "/tmp/webapp/users.js"
   }
 
   provisioner "file" {
-    source      = "${var.artifact_path}/auth.js"
+    source      = "auth.js"
     destination = "/tmp/webapp/auth.js"
   }
 
   provisioner "file" {
-    source      = "${var.artifact_path}/package.json"
+    source      = "package.json"
     destination = "/tmp/webapp/package.json"
   }
 
   provisioner "file" {
-    source      = "${var.artifact_path}/test"
+    source      = "test"
     destination = "/tmp/webapp/"
   }
 
@@ -69,7 +69,7 @@ build {
   }
 
   provisioner "file" {
-    source      = "${var.artifact_path}/webapp.service"
+    source      = "webapp.service"
     destination = "/tmp/webapp.service"
   }
 
