@@ -83,5 +83,4 @@ jobs:
         run: packer init *.pkr.hcl 
         
       - name: Build Custom Image with Packer
-        run: |
-          packer build *.pkr.hcl
+        run: packer build *.pkr.hcl
