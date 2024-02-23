@@ -1,0 +1,90 @@
+name: Build and Deploy Node.js App
+
+on:
+  push:
+    branches: [ "main" ]
+    types: [closed]
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+    if: github.event.pull request.merged == true
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_DATABASE: test_db
+      DB_USER: root
+      DB_PASSWORD: root
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'  
+
+      - name: Install Dependencies
+        run: npm install
+        
+      - name: Setup MySQL
+        run: |
+          sudo /etc/init.d/mysql start
+          mysql -e 'CREATE DATABASE test_db;' -uroot -proot
+
+      - name: Init MySQL
+        run: node users.js
+        
+      - name: Run Integration Tests
+        run: npm test 
+
+  build-artifact:
+    needs: integration-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Archive Production Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nodejs-artifact
+          path: |
+            *.js
+            package.json
+            test
+            webapp.service
+
+  build-image:
+    needs: build-artifact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Download Node.js Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nodejs-artifact
+          path: build
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@v3.0.0
+        with:
+          packer-version: '1.10.0'
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: "${{ vars.GCP_PROJECT_ID }}"
+          credentials_json: '${{ secrets.GOOGLE_SA_CREDENTIALS }}'
+          
+      - name: Packer init
+        run: packer init *.pkr.hcl 
+        
+      - name: Build Custom Image with Packer
+        run: |
+          packer build \
+            -var 'artifact_path=$(pwd)/build' \
+            *.pkr.hcl
