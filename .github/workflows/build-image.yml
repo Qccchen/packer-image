@@ -67,7 +67,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: nodejs-artifact
-          path: build
 
       - name: Setup Packer
         uses: hashicorp/setup-packer@v3.0.0
@@ -85,6 +84,4 @@ jobs:
         
       - name: Build Custom Image with Packer
         run: |
-          packer build \
-            -var 'artifact_path=$(pwd)/build' \
-            *.pkr.hcl
+          packer build *.pkr.hcl
