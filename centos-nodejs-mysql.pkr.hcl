@@ -51,7 +51,7 @@ build {
   }
 
   provisioner "file" {
-    source      = "package.json"
+    source      = "packages.json"
     destination = "/tmp/webapp/package.json"
   }
 
