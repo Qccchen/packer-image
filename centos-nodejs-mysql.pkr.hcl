@@ -8,7 +8,7 @@ packer {
 }
 
 source "googlecompute" "centos" {
-  project_id   = "tribal-affinity-414200"
+    project_id   = "tribal-affinity-414200"
   source_image = "centos-stream-8-v20240110"
   ssh_username = "packer"
   zone         = "us-west2-a"
