@@ -10,6 +10,7 @@ WorkingDirectory=/home/csye6225/webapp
 ExecStart=/usr/bin/node /home/csye6225/webapp/server.js
 Restart=on-failure
 Environment=PORT=8080 NODE_ENV=production
+EnvironmentFile=/etc/environment
 
 [Install]
 WantedBy=multi-user.target

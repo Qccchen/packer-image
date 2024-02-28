@@ -23,13 +23,13 @@ build {
     inline = [
       "sudo dnf module -y enable nodejs:18",
       "sudo dnf install -y nodejs",
-      "sudo dnf install -y mysql-server",
+      // "sudo dnf install -y mysql-server",
       "sudo groupadd csye6225",
       "sudo useradd -r -g csye6225 -s /usr/sbin/nologin csye6225",
-      "sudo systemctl start mysqld",
-      "sudo systemctl enable mysqld",
-      "sudo mysqladmin -u root password 'root'",
-      "sudo mysql -u root -p'root' -e 'CREATE DATABASE IF NOT EXISTS test_db;'",
+      // "sudo systemctl start mysqld",
+      // "sudo systemctl enable mysqld",
+      // "sudo mysqladmin -u root password 'root'",
+      // "sudo mysql -u root -p'root' -e 'CREATE DATABASE IF NOT EXISTS test_db;'",
       "mkdir /tmp/webapp",
       "sudo mkdir -p /home/csye6225",
     ]
