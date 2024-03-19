@@ -15,6 +15,10 @@ jobs:
       DB_DATABASE: test_db
       DB_USER: root
       DB_PASSWORD: root
+
+    defaults:
+      run:
+        working-directory: ./webapp
     
     steps:
       - name: Checkout Repository

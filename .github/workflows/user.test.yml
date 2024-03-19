@@ -14,6 +14,10 @@ jobs:
       DB_USER: root
       DB_PASSWORD: root
 
+    defaults:
+      run:
+        working-directory: ./webapp
+
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
@@ -22,9 +26,6 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18'
-
-    - name: Change to webapp directory
-      run: cd webapp/
 
     - name: Install Dependencies
       run: npm install
