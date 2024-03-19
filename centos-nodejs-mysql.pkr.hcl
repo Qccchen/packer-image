@@ -30,7 +30,6 @@ build {
       // "sudo systemctl enable mysqld",
       // "sudo mysqladmin -u root password 'root'",
       // "sudo mysql -u root -p'root' -e 'CREATE DATABASE IF NOT EXISTS test_db;'",
-      // "mkdir /tmp/webapp",
       "sudo mkdir -p /home/csye6225",
       "curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh",
       "sudo bash add-google-cloud-ops-agent-repo.sh --also-install"
