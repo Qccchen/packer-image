@@ -1,4 +1,5 @@
 const { Users, sequelize } = require('./users');
+const logger = require('./logger');
 const bcrypt = require('bcrypt');
 
 function generateToken(username, password) {
@@ -14,6 +15,7 @@ async function verifyToken(req, res, next) {
 
     const user = await Users.findOne({ where: { username } });
     if (!user || !user.password || !bcrypt.compareSync(password, user.password)) {
+        logger.error('Unauthorized: Invalid credentials');
         res.status(401).json({ error: 'Unauthorized: Invalid credentials' });
         return;
     } 
