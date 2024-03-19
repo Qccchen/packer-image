@@ -11,7 +11,10 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
-      
+
+    - name: Change to webapp directory
+      run: cd webapp/      
+
     - name: Use Node.js 
       uses: actions/setup-node@v3
       with:
