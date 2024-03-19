@@ -30,38 +30,27 @@ build {
       // "sudo systemctl enable mysqld",
       // "sudo mysqladmin -u root password 'root'",
       // "sudo mysql -u root -p'root' -e 'CREATE DATABASE IF NOT EXISTS test_db;'",
-      "mkdir /tmp/webapp",
+      // "mkdir /tmp/webapp",
       "sudo mkdir -p /home/csye6225",
+      "curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh",
+      "sudo bash add-google-cloud-ops-agent-repo.sh --also-install"
     ]
   }
 
   provisioner "file" {
-    source      = "server.js"
-    destination = "/tmp/webapp/server.js"
+    source      = "webapp"
+    destination = "/tmp/"
   }
 
   provisioner "file" {
-    source      = "users.js"
-    destination = "/tmp/webapp/users.js"
-  }
-
-  provisioner "file" {
-    source      = "auth.js"
-    destination = "/tmp/webapp/auth.js"
-  }
-
-  provisioner "file" {
-    source      = "package.json"
-    destination = "/tmp/webapp/package.json"
-  }
-
-  provisioner "file" {
-    source      = "test"
-    destination = "/tmp/webapp/"
+    source      = "ops-agent-config.yaml"
+    destination = "/tmp/ops-agent-config.yaml"
   }
 
   provisioner "shell" {
     inline = [
+      "sudo mv /tmp/ops-agent-config.yaml /etc/google-cloud-ops-agent/config.yaml",
+      "sudo systemctl restart google-cloud-ops-agent",
       "sudo mv /tmp/webapp /home/csye6225/",
       "sudo chown -R csye6225:csye6225 /home/csye6225",
       "sudo -u csye6225 bash -c 'cd /home/csye6225/webapp && npm install'"

@@ -1,0 +1,17 @@
+logging:
+  receivers:
+    webapp-logs:
+      type: files
+      include_paths:
+        - '/home/csye6225/webapp/logs/application.log'  
+      record_log_file_path: true
+  processors:
+    webapp_processor:
+      type: parse_json
+      time_key: timestamp
+      time_format: "%Y-%m-%dT%H:%M:%S.%LZ"
+  service:
+    pipelines:
+      default_pipeline:
+        receivers: [webapp-logs]
+        processors: [webapp_processor]
