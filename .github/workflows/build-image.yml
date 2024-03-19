@@ -51,9 +51,7 @@ jobs:
         with:
           name: nodejs-artifact
           path: |
-            *.js
-            package.json
-            test
+            webapp/
             webapp.service
 
   build-image:
