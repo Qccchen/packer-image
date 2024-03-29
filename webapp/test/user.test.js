@@ -1,6 +1,7 @@
 const { expect }= require('chai');
 const request = require('supertest');
 const app = require('../server');
+const { Users, sequelize } = require('../users');
 
 describe ('Integration tests for /v1/user endpoint', () => {
     let authToken;
@@ -15,6 +16,10 @@ describe ('Integration tests for /v1/user endpoint', () => {
                 last_name: 'User',
             })
             .expect(201);
+
+        const user = await Users.findByPk(response.body.id);
+        await user.update({ is_verified: true });
+        await user.save();
 
         authToken = response.headers.authorization;
 

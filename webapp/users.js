@@ -39,6 +39,18 @@ const Users = sequelize.define('users', {
     last_name: {
         type: DataTypes.STRING,
         allowNull: false,
+    },
+    is_verified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
+    verification_sent_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
+    verification_token: {
+        type: DataTypes.UUID,
+        allowNull: true,
     }
 });
 
