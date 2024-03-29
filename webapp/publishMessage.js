@@ -14,7 +14,6 @@ async function publishMessage(userData) {
         logger.info(`Message ${messageId} published to ${TOPIC_NAME}.`);
     } catch (error) {
         logger.error('Error publishing new user message to Pub/Sub', { error: error.toString() });
-        throw new Error('Error publishing new user message to Pub/Sub');
     }
 }
 
