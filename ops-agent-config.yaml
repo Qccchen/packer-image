@@ -10,8 +10,13 @@ logging:
       type: parse_json
       time_key: timestamp
       time_format: "%Y-%m-%dT%H:%M:%S.%LZ"
+    modify_fields:
+      type: modify_fields
+      fields:
+        severity:
+          copy_from: jsonPayload.severity
   service:
     pipelines:
       default_pipeline:
         receivers: [webapp-logs]
-        processors: [webapp_processor]
+        processors: [webapp_processor, modify_fields]

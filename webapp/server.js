@@ -3,6 +3,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { Users, sequelize } = require('./users');
 const { generateToken, verifyToken } = require('./auth');
+const { publishMessage } = require('./publishMessage');
+const { verifyUserStatus } = require('./middlewares');
 
 const app = express();
 const PORT = 8080;
@@ -46,6 +48,8 @@ app.post('/v1/user', async (req, res) => {
         const token = generateToken(username, password);
         const newUser = await Users.create({ username, password, first_name, last_name });
         
+        await publishMessage({ userId: newUser.id, email: newUser.username });
+
         res.status(201).header('Authorization', token).json({
             id: newUser.id,
             username: newUser.username,
@@ -70,7 +74,7 @@ app.post('/v1/user', async (req, res) => {
     }
 });
 
-app.get('/v1/user/self', verifyToken, async (req, res) => {
+app.get('/v1/user/self', verifyToken, verifyUserStatus, async (req, res) => {
     try {
         const user = await Users.findByPk(req.id, { attributes: { exclude: ['password'] } });
         if (user) {
@@ -93,7 +97,7 @@ app.get('/v1/user/self', verifyToken, async (req, res) => {
     }
 });
 
-app.put('/v1/user/self', verifyToken, async (req, res) => {
+app.put('/v1/user/self', verifyToken, verifyUserStatus, async (req, res) => {
     try {
         const { first_name, last_name, password, username } = req.body;
         const existingUser = await Users.findOne({ where: { username } });
@@ -115,6 +119,40 @@ app.put('/v1/user/self', verifyToken, async (req, res) => {
         res.status(500).json({ error: 'Invalid request' });
     }
 
+});
+
+app.get('/verify', async (req, res) => {
+    const { verificationToken } = req.query;
+    if (!verificationToken) {
+        res.status(400).json({ error: 'Invalid verification link' });
+        logger.warn('Invalid verification link', { verificationToken });
+        return;
+    }
+
+    try {
+        const user = await Users.findOne({ where: { verification_token: verificationToken } });
+        if (!user) {
+            res.status(404).send('Invalid token');
+            logger.warn('User not found', { verificationToken });
+            return;
+        }
+
+        const currentTime = new Date();
+        const verificationSentTime = new Date(user.verification_sent_at);
+        if (currentTime - verificationSentTime > 120000) {
+            logger.warn('Verification link expired', { userId: user.id });
+            res.status(400).send('Verification link expired');
+            return;
+        }
+
+        await user.update({ is_verified: true });
+        logger.info('User email verified successfully', { userId: user.id });
+        res.status(200).send('Email verified successfully');
+
+    } catch (err) {
+        res.status(500).json({ error: 'Invalid request' });
+        logger.error('Error retrieving user', { error: err.toString(), verificationToken });
+    }
 });
 
 app.listen(PORT, () => {
