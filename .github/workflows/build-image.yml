@@ -110,9 +110,8 @@ jobs:
       - name: Build Custom Image with Packer
         run: |
           packer build *.pkr.hcl
-          IMAGE_NAME=$(jq -r '.builds[-1].artifact_id' manifest.json | cut -d':' -f2)
-          # echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
-          echo "::set-output name=image_name::$IMAGE_NAME"
+          IMAGE_NAME=$(jq -r '.builds[-1].artifact_id' packer-manifest.json | cut -d':' -f2)
+          echo "IMAGE_NAME=$IMAGE_NAME" >> GITHUB_OUTPUT
 
   update-instance-template:
     needs: build-image
@@ -125,33 +124,18 @@ jobs:
           project_id: "${{ vars.GCP_PROJECT_ID }}"
           credentials_json: '${{ secrets.GOOGLE_SA_CREDENTIALS }}'
 
-      - name: Get KMS Key Self-Link
-        run: |
-          KMS_KEY_SELF_LINK=$(gcloud kms keys describe VM_KEY \
-            --location=${{ vars.GCP_REGION }} \
-            --keyring=WEBAPP_KEY_RING \
-            --format="value(selfLink)")
-
-      - name: Get Network and Subnetwork Self-Links
-        run: |
-          NETWORK_SELF_LINK=$(gcloud compute networks describe my_vpc \
-            --format="value(selfLink)")
-          SUBNETWORK_SELF_LINK=$(gcloud compute networks subnets describe webapp \
-            --region=${{ vars.GCP_REGION }} \
-            --format="value(selfLink)")
-
-      - name: Get Service Account Email
-        run: |
-          SERVICE_ACCOUNT_EMAIL=$(gcloud iam service-accounts list \
-            --format="value(email)" \
-            --filter="displayName=Webapp Service Account")
-
-      - name: Create New Instance Template
+      - name: Config Parameters
         run: |
           TIMESTAMP=$(date +%s)
           INSTANCE_TEMPLATE_NAME="${{ vars.INSTANCE_TEMPLATE_NAME }}-$TIMESTAMP"
           IMAGE_NAME="${{ needs.build-image.outputs.image_name }}"
+          KMS_KEY_SELF_LINK=projects/${{ vars.GCP_PROJECT_ID }}/locations/${{ vars.GCP_REGION }}/keyRings/WEBAPP_KEY_RING/cryptoKeys/VM_KEY
+          NETWORK_SELF_LINK=https://www.googleapis.com/compute/v1/projects/${{ vars.GCP_PROJECT_ID }}/global/networks/my-vpc
+          SUBNETWORK_SELF_LINK=https://www.googleapis.com/compute/v1/projects/${{ vars.GCP_PROJECT_ID }}/regions/${{ vars.GCP_REGION }}/subnetworks/webapp
+          SERVICE_ACCOUNT_EMAIL=webapp-service-account@${{ vars.GCP_PROJECT_ID }}.iam.gserviceaccount.com
 
+      - name: Create New Instance Template
+        run: |
           gcloud compute instance-templates create $INSTANCE_TEMPLATE_NAME \
             --machine-type=e2-small \
             --instance-template-region=${{ vars.GCP_REGION }} \
