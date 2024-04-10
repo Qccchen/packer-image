@@ -43,6 +43,26 @@ jobs:
       - name: Run Integration Tests
         run: npm test 
 
+  packer-format-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@v3.0.0
+        with:
+          version: '1.10.0'
+
+      - name: Packer init
+        run: packer init *.pkr.hcl    
+
+      - name: Packer fmt
+        run: packer fmt -check -diff *.pkr.hcl
+
+      - name: Packer validate
+        run: packer validate *.pkr.hcl  
+
   build-artifact:
     needs: integration-test
     runs-on: ubuntu-latest
@@ -57,9 +77,12 @@ jobs:
           path: |
             webapp/
             webapp.service
+            ops-agent-config.yaml
 
   build-image:
-    needs: build-artifact
+    needs: 
+      - build-artifact
+      - packer-format-validate
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -85,4 +108,82 @@ jobs:
         run: packer init *.pkr.hcl 
         
       - name: Build Custom Image with Packer
-        run: packer build *.pkr.hcl
+        run: |
+          packer build *.pkr.hcl
+          IMAGE_NAME=$(jq -r '.builds[-1].artifact_id' manifest.json | cut -d':' -f2)
+          # echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+          echo "::set-output name=image_name::$IMAGE_NAME"
+
+  update-instance-template:
+    needs: build-image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: "${{ vars.GCP_PROJECT_ID }}"
+          credentials_json: '${{ secrets.GOOGLE_SA_CREDENTIALS }}'
+
+      - name: Get KMS Key Self-Link
+        run: |
+          KMS_KEY_SELF_LINK=$(gcloud kms keys describe VM_KEY \
+            --location=${{ vars.GCP_REGION }} \
+            --keyring=WEBAPP_KEY_RING \
+            --format="value(selfLink)")
+
+      - name: Get Network and Subnetwork Self-Links
+        run: |
+          NETWORK_SELF_LINK=$(gcloud compute networks describe my_vpc \
+            --format="value(selfLink)")
+          SUBNETWORK_SELF_LINK=$(gcloud compute networks subnets describe webapp \
+            --region=${{ vars.GCP_REGION }} \
+            --format="value(selfLink)")
+
+      - name: Get Service Account Email
+        run: |
+          SERVICE_ACCOUNT_EMAIL=$(gcloud iam service-accounts list \
+            --format="value(email)" \
+            --filter="displayName=Webapp Service Account")
+
+      - name: Create New Instance Template
+        run: |
+          TIMESTAMP=$(date +%s)
+          INSTANCE_TEMPLATE_NAME="${{ vars.INSTANCE_TEMPLATE_NAME }}-$TIMESTAMP"
+          IMAGE_NAME="${{ needs.build-image.outputs.image_name }}"
+
+          gcloud compute instance-templates create $INSTANCE_TEMPLATE_NAME \
+            --machine-type=e2-small \
+            --instance-template-region=${{ vars.GCP_REGION }} \
+            --maintenance-policy=TERMINATE \
+            --tags=web-servers \
+            --disk="image=projects/${{ vars.GCP_PROJECT_ID }}/global/images/$IMAGE_NAME,size=100,type=pd-balanced" \
+            --disk="kms-key=$KMS_KEY_SELF_LINK" \
+            --network-interface="network=$NETWORK_SELF_LINK,subnet=$SUBNETWORK_SELF_LINK" \
+            --metadata=startup-script='#!/bin/bash
+            echo "DB_DATABASE=${{ vars.DB_DATABASE }}" >> /etc/environment
+            echo "DB_USER=${{ vars.DB_USER }}" >> /etc/environment
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> /etc/environment
+            echo "DB_HOST=${{ vars.DB_HOST }}" >> /etc/environment' \
+            --service-account=$SERVICE_ACCOUNT_EMAIL,scopes=cloud-platform
+
+      - name: Update Managed Instance Group with New Template
+        run: |
+          gcloud compute instance-groups managed set-instance-template ${{ vars.INSTANCE_GROUP_NAME }} \
+            --template=$INSTANCE_TEMPLATE_NAME\
+            --region=${{ vars.GCP_REGION }}
+    
+      - name: Recreate Instances in Managed Instance Group
+        run: |
+          gcloud compute instance-groups managed rolling-action start-update ${{ vars.INSTANCE_GROUP_NAME }} \
+            --version=template=$INSTANCE_TEMPLATE_NAME\
+            --region=${{ vars.GCP_REGION }} \
+            --type=proactive
+  
+      - name: Wait for MIG Refresh to Complete
+        run: |
+          gcloud compute instance-groups managed wait-until ${{ vars.INSTANCE_GROUP_NAME }} \
+            --version-target-reached \
+            --region=${{ vars.GCP_REGION }}
+
+      
