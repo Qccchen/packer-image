@@ -144,7 +144,7 @@ jobs:
             --instance-template-region=${{ vars.GCP_REGION }} \
             --tags=web-servers \
             --image=projects/${{ vars.GCP_PROJECT_ID }}/global/images/${{ env.IMAGE_NAME }} \
-            --boot-disk-size=100GB \
+            --boot-disk-size=50GB \
             --boot-disk-type=pd-balanced \
             --boot-disk-kms-key=${{ env.KMS_KEY_ID }} \
             --network-interface="network=${{ env.NETWORK_SELF_LINK }},subnet=${{ env.SUBNETWORK_SELF_LINK }}" \
