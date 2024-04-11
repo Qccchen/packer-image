@@ -115,14 +115,10 @@ jobs:
       - name: Extract Image Name
         id: extract_image
         run: |
+          echo $(jq -r '.builds[-1].artifact_id' packer-manifest.json | cut -d':' -f2)
           IMAGE_NAME=$(jq -r '.builds[-1].artifact_id' packer-manifest.json | cut -d':' -f2)
           echo "IMAGE_NAME=$IMAGE_NAME" >> GITHUB_OUTPUT
-
-      - name: Check Image Name
-        run: |
-          echo "Captured Image Name: ${{ steps.extract_image.outputs.IMAGE_NAME }}"
       
-
   update-instance-template:
     needs: build-image
     runs-on: ubuntu-latest
