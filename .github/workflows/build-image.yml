@@ -109,7 +109,7 @@ jobs:
         
       - name: Build Custom Image with Packer
         run: |
-          packer build -machine-readable *.pkr.hcl
+          packer build *.pkr.hcl
           IMAGE_NAME=$(jq -r '.builds[-1].artifact_id' packer-manifest.json | cut -d':' -f2)
           echo "IMAGE_NAME=$IMAGE_NAME" >> GITHUB_OUTPUT
 
@@ -126,9 +126,9 @@ jobs:
 
       - name: Config Parameters
         run: |
-          echo "TIMESTAMP=$(date +%s)" >> $GITHUB_ENV
+          echo "TIMESTAMP=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
           echo "INSTANCE_TEMPLATE_NAME=${{ vars.INSTANCE_TEMPLATE_NAME }}-${{ env.TIMESTAMP }}" >> $GITHUB_ENV
-          echo "IMAGE_NAME=${{ needs.build-image.outputs.image_name }}" >> $GITHUB_ENV
+          echo "IMAGE_NAME=${{ needs.build-image.outputs.IMAGE_NAME }}" >> $GITHUB_ENV
           echo "KMS_KEY_ID=projects/${{ vars.GCP_PROJECT_ID }}/locations/${{ vars.GCP_REGION }}/keyRings/${{ vars.WEBAPP_KEY_RING }}/cryptoKeys/${{ vars.VM_KEY }}" >> $GITHUB_ENV
           echo "NETWORK_SELF_LINK=https://www.googleapis.com/compute/v1/projects/${{ vars.GCP_PROJECT_ID }}/global/networks/my-vpc" >> $GITHUB_ENV
           echo "SUBNETWORK_SELF_LINK=https://www.googleapis.com/compute/v1/projects/${{ vars.GCP_PROJECT_ID }}/regions/${{ vars.GCP_REGION }}/subnetworks/webapp" >> $GITHUB_ENV

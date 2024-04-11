@@ -68,4 +68,9 @@ build {
       "sudo systemctl enable webapp"
     ]
   }
+
+  post-processor "manifest" {
+    output     = "packer_manifest.json"
+    strip_path = true
+  }
 }
