@@ -115,7 +115,7 @@ jobs:
         id: build_image
         run: |
           packer build *.pkr.hcl
-          echo "IMAGE_NAME=$(jq -r '.builds[-1].artifact_id' packer-manifest.json | cut -d':' -f2)" >> GITHUB_OUTPUT
+          echo "IMAGE_NAME=$(jq -r '.builds[-1].artifact_id' packer-manifest.json | cut -d':' -f2)" >> $GITHUB_OUTPUT
 
   update-instance-template:
     needs: build-image
