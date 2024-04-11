@@ -109,7 +109,7 @@ jobs:
         
       - name: Build Custom Image with Packer
         run: |
-          packer build -machine-readable *.pkr.hcl
+          packer build *.pkr.hcl
           IMAGE_NAME=$(jq -r '.builds[-1].artifact_id' packer-manifest.json | cut -d':' -f2)
           echo "IMAGE_NAME=$IMAGE_NAME" >> GITHUB_OUTPUT
 
