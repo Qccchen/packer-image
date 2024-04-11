@@ -111,8 +111,17 @@ jobs:
       - name: Build Custom Image with Packer
         run: |
           packer build *.pkr.hcl
+
+      - name: Extract Image Name
+        id: extract_image
+        run: |
           IMAGE_NAME=$(jq -r '.builds[-1].artifact_id' packer-manifest.json | cut -d':' -f2)
           echo "IMAGE_NAME=$IMAGE_NAME" >> GITHUB_OUTPUT
+
+      - name: Check Image Name
+        run: |
+          echo "Captured Image Name: ${{ steps.extract_image.outputs.IMAGE_NAME }}"
+      
 
   update-instance-template:
     needs: build-image
@@ -125,9 +134,11 @@ jobs:
           project_id: "${{ vars.GCP_PROJECT_ID }}"
           credentials_json: '${{ secrets.GOOGLE_SA_CREDENTIALS }}'
 
+      - name: Set Timestamp
+        run: echo "TIMESTAMP=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
+
       - name: Config Variables
         run: |
-          echo "TIMESTAMP=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
           echo "INSTANCE_TEMPLATE_NAME=${{ vars.INSTANCE_TEMPLATE_NAME }}-${{ env.TIMESTAMP }}" >> $GITHUB_ENV
           echo "IMAGE_NAME=${{ needs.build-image.outputs.IMAGE_NAME }}" >> $GITHUB_ENV
           echo "KMS_KEY_ID=projects/${{ vars.GCP_PROJECT_ID }}/locations/${{ vars.GCP_REGION }}/keyRings/${{ vars.WEBAPP_KEY_RING }}/cryptoKeys/${{ vars.VM_KEY }}" >> $GITHUB_ENV
