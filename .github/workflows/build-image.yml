@@ -66,6 +66,7 @@ jobs:
   build-artifact:
     needs: integration-test
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -117,22 +118,20 @@ jobs:
     needs: build-image
     runs-on: ubuntu-latest
 
+    env:
+      INSTANCE_TEMPLATE_NAME: ${{ vars.INSTANCE_TEMPLATE_NAME }}-$(date +'%Y-%m-%dT%H:%M:%S')
+      IMAGE_NAME: ${{ needs.build-image.outputs.IMAGE_NAME }}
+      KMS_KEY_ID: projects/${{ vars.GCP_PROJECT_ID }}/locations/${{ vars.GCP_REGION }}/keyRings/${{ vars.WEBAPP_KEY_RING }}/cryptoKeys/${{ vars.VM_KEY }}
+      NETWORK_SELF_LINK: https://www.googleapis.com/compute/v1/projects/${{ vars.GCP_PROJECT_ID }}/global/networks/my-vpc
+      SUBNETWORK_SELF_LINK: https://www.googleapis.com/compute/v1/projects/${{ vars.GCP_PROJECT_ID }}/regions/${{ vars.GCP_REGION }}/subnetworks/webapp
+      SERVICE_ACCOUNT_EMAIL: webapp-service-account@${{ vars.GCP_PROJECT_ID }}.iam.gserviceaccount.com
+
     steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           project_id: "${{ vars.GCP_PROJECT_ID }}"
           credentials_json: '${{ secrets.GOOGLE_SA_CREDENTIALS }}'
-
-      - name: Config Parameters
-        run: |
-          echo "TIMESTAMP=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
-          echo "INSTANCE_TEMPLATE_NAME=${{ vars.INSTANCE_TEMPLATE_NAME }}-${{ env.TIMESTAMP }}" >> $GITHUB_ENV
-          echo "IMAGE_NAME=${{ needs.build-image.outputs.IMAGE_NAME }}" >> $GITHUB_ENV
-          echo "KMS_KEY_ID=projects/${{ vars.GCP_PROJECT_ID }}/locations/${{ vars.GCP_REGION }}/keyRings/${{ vars.WEBAPP_KEY_RING }}/cryptoKeys/${{ vars.VM_KEY }}" >> $GITHUB_ENV
-          echo "NETWORK_SELF_LINK=https://www.googleapis.com/compute/v1/projects/${{ vars.GCP_PROJECT_ID }}/global/networks/my-vpc" >> $GITHUB_ENV
-          echo "SUBNETWORK_SELF_LINK=https://www.googleapis.com/compute/v1/projects/${{ vars.GCP_PROJECT_ID }}/regions/${{ vars.GCP_REGION }}/subnetworks/webapp" >> $GITHUB_ENV
-          echo "SERVICE_ACCOUNT_EMAIL=webapp-service-account@${{ vars.GCP_PROJECT_ID }}.iam.gserviceaccount.com" >> $GITHUB_ENV
 
       - name: Create New Instance Template
         run: |
