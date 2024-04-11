@@ -109,7 +109,7 @@ jobs:
         
       - name: Build Custom Image with Packer
         run: |
-          packer build *.pkr.hcl
+          packer build -machine-readable *.pkr.hcl
           IMAGE_NAME=$(jq -r '.builds[-1].artifact_id' packer-manifest.json | cut -d':' -f2)
           echo "IMAGE_NAME=$IMAGE_NAME" >> GITHUB_OUTPUT
 
@@ -126,41 +126,43 @@ jobs:
 
       - name: Config Parameters
         run: |
-          TIMESTAMP=$(date +%s)
-          INSTANCE_TEMPLATE_NAME="${{ vars.INSTANCE_TEMPLATE_NAME }}-$TIMESTAMP"
-          IMAGE_NAME="${{ needs.build-image.outputs.image_name }}"
-          KMS_KEY_SELF_LINK=projects/${{ vars.GCP_PROJECT_ID }}/locations/${{ vars.GCP_REGION }}/keyRings/WEBAPP_KEY_RING/cryptoKeys/VM_KEY
-          NETWORK_SELF_LINK=https://www.googleapis.com/compute/v1/projects/${{ vars.GCP_PROJECT_ID }}/global/networks/my-vpc
-          SUBNETWORK_SELF_LINK=https://www.googleapis.com/compute/v1/projects/${{ vars.GCP_PROJECT_ID }}/regions/${{ vars.GCP_REGION }}/subnetworks/webapp
-          SERVICE_ACCOUNT_EMAIL=webapp-service-account@${{ vars.GCP_PROJECT_ID }}.iam.gserviceaccount.com
+          echo "TIMESTAMP=$(date +%s)" >> $GITHUB_ENV
+          echo "INSTANCE_TEMPLATE_NAME=${{ vars.INSTANCE_TEMPLATE_NAME }}-${{ env.TIMESTAMP }}" >> $GITHUB_ENV
+          echo "IMAGE_NAME=${{ needs.build-image.outputs.image_name }}" >> $GITHUB_ENV
+          echo "KMS_KEY_ID=projects/${{ vars.GCP_PROJECT_ID }}/locations/${{ vars.GCP_REGION }}/keyRings/${{ vars.WEBAPP_KEY_RING }}/cryptoKeys/${{ vars.VM_KEY }}" >> $GITHUB_ENV
+          echo "NETWORK_SELF_LINK=https://www.googleapis.com/compute/v1/projects/${{ vars.GCP_PROJECT_ID }}/global/networks/my-vpc" >> $GITHUB_ENV
+          echo "SUBNETWORK_SELF_LINK=https://www.googleapis.com/compute/v1/projects/${{ vars.GCP_PROJECT_ID }}/regions/${{ vars.GCP_REGION }}/subnetworks/webapp" >> $GITHUB_ENV
+          echo "SERVICE_ACCOUNT_EMAIL=webapp-service-account@${{ vars.GCP_PROJECT_ID }}.iam.gserviceaccount.com" >> $GITHUB_ENV
 
       - name: Create New Instance Template
         run: |
-          gcloud compute instance-templates create $INSTANCE_TEMPLATE_NAME \
+          gcloud compute instance-templates create ${{ env.INSTANCE_TEMPLATE_NAME }} \
             --machine-type=e2-small \
             --instance-template-region=${{ vars.GCP_REGION }} \
-            --maintenance-policy=TERMINATE \
             --tags=web-servers \
-            --disk="image=projects/${{ vars.GCP_PROJECT_ID }}/global/images/$IMAGE_NAME,size=100,type=pd-balanced" \
-            --disk="kms-key=$KMS_KEY_SELF_LINK" \
-            --network-interface="network=$NETWORK_SELF_LINK,subnet=$SUBNETWORK_SELF_LINK" \
+            --image=projects/${{ vars.GCP_PROJECT_ID }}/global/images/${{ env.IMAGE_NAME }} \
+            --boot-disk-size=100GB \
+            --boot-disk-type=pd-balanced \
+            --boot-disk-kms-key=kms-key=${{ env.KMS_KEY_ID }} \
+            --network-interface="network=${{ env.NETWORK_SELF_LINK }},subnet=${{ env.SUBNETWORK_SELF_LINK }}" \
             --metadata=startup-script='#!/bin/bash
             echo "DB_DATABASE=${{ vars.DB_DATABASE }}" >> /etc/environment
             echo "DB_USER=${{ vars.DB_USER }}" >> /etc/environment
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> /etc/environment
             echo "DB_HOST=${{ vars.DB_HOST }}" >> /etc/environment' \
-            --service-account=$SERVICE_ACCOUNT_EMAIL,scopes=cloud-platform
+            --service-account=${{ env.SERVICE_ACCOUNT_EMAIL }} \
+            --scopes=cloud-platform
 
       - name: Update Managed Instance Group with New Template
         run: |
           gcloud compute instance-groups managed set-instance-template ${{ vars.INSTANCE_GROUP_NAME }} \
-            --template=$INSTANCE_TEMPLATE_NAME\
+            --template=projects/${{ vars.GCP_PROJECT_ID }}/regions/${{ vars.GCP_REGION }}/instanceTemplates/${{ env.INSTANCE_TEMPLATE_NAME }} \
             --region=${{ vars.GCP_REGION }}
     
       - name: Recreate Instances in Managed Instance Group
         run: |
           gcloud compute instance-groups managed rolling-action start-update ${{ vars.INSTANCE_GROUP_NAME }} \
-            --version=template=$INSTANCE_TEMPLATE_NAME\
+            --version=template=projects/${{ vars.GCP_PROJECT_ID }}/regions/${{ vars.GCP_REGION }}/instanceTemplates/${{ env.INSTANCE_TEMPLATE_NAME }} \
             --region=${{ vars.GCP_REGION }} \
             --type=proactive
   
