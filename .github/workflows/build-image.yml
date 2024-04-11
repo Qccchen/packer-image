@@ -146,7 +146,7 @@ jobs:
             --image=projects/${{ vars.GCP_PROJECT_ID }}/global/images/${{ env.IMAGE_NAME }} \
             --boot-disk-size=100GB \
             --boot-disk-type=pd-balanced \
-            --boot-disk-kms-key=kms-key=${{ env.KMS_KEY_ID }} \
+            --boot-disk-kms-key=${{ env.KMS_KEY_ID }} \
             --network-interface="network=${{ env.NETWORK_SELF_LINK }},subnet=${{ env.SUBNETWORK_SELF_LINK }}" \
             --metadata=startup-script='#!/bin/bash
             echo "DB_DATABASE=${{ vars.DB_DATABASE }}" >> /etc/environment
