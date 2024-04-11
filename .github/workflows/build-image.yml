@@ -85,6 +85,9 @@ jobs:
       - build-artifact
       - packer-format-validate
     runs-on: ubuntu-latest
+    outputs:
+      image_name: ${{ steps.build_image.outputs.IMAGE_NAME }}
+
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -109,16 +112,11 @@ jobs:
         run: packer init *.pkr.hcl 
         
       - name: Build Custom Image with Packer
+        id: build_image
         run: |
           packer build *.pkr.hcl
+          echo "IMAGE_NAME=$(jq -r '.builds[-1].artifact_id' packer-manifest.json | cut -d':' -f2)" >> GITHUB_OUTPUT
 
-      - name: Extract Image Name
-        id: extract_image
-        run: |
-          echo $(jq -r '.builds[-1].artifact_id' packer-manifest.json | cut -d':' -f2)
-          IMAGE_NAME=$(jq -r '.builds[-1].artifact_id' packer-manifest.json | cut -d':' -f2)
-          echo "IMAGE_NAME=$IMAGE_NAME" >> GITHUB_OUTPUT
-      
   update-instance-template:
     needs: build-image
     runs-on: ubuntu-latest
@@ -130,13 +128,10 @@ jobs:
           project_id: "${{ vars.GCP_PROJECT_ID }}"
           credentials_json: '${{ secrets.GOOGLE_SA_CREDENTIALS }}'
 
-      - name: Set Timestamp
-        run: echo "TIMESTAMP=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
-
       - name: Config Variables
         run: |
-          echo "INSTANCE_TEMPLATE_NAME=${{ vars.INSTANCE_TEMPLATE_NAME }}-${{ env.TIMESTAMP }}" >> $GITHUB_ENV
-          echo "IMAGE_NAME=${{ needs.build-image.outputs.IMAGE_NAME }}" >> $GITHUB_ENV
+          echo "INSTANCE_TEMPLATE_NAME=${{ vars.INSTANCE_TEMPLATE_NAME }}-$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
+          echo "IMAGE_NAME=${{ needs.build-image.outputs.image_name }}" >> $GITHUB_ENV
           echo "KMS_KEY_ID=projects/${{ vars.GCP_PROJECT_ID }}/locations/${{ vars.GCP_REGION }}/keyRings/${{ vars.WEBAPP_KEY_RING }}/cryptoKeys/${{ vars.VM_KEY }}" >> $GITHUB_ENV
           echo "NETWORK_SELF_LINK=https://www.googleapis.com/compute/v1/projects/${{ vars.GCP_PROJECT_ID }}/global/networks/my-vpc" >> $GITHUB_ENV
           echo "SUBNETWORK_SELF_LINK=https://www.googleapis.com/compute/v1/projects/${{ vars.GCP_PROJECT_ID }}/regions/${{ vars.GCP_REGION }}/subnetworks/webapp" >> $GITHUB_ENV
