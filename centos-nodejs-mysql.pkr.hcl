@@ -21,6 +21,7 @@ build {
 
   provisioner "shell" {
     inline = [
+      "sudo dnf -y update",
       "sudo dnf module -y enable nodejs:18",
       "sudo dnf install -y nodejs",
       // "sudo dnf install -y mysql-server",
