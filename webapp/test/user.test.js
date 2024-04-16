@@ -8,7 +8,7 @@ describe ('Integration tests for /v1/user endpoint', () => {
 
     it ('create an account and validate its existence', async () => {
         const response = await request(app)
-            .post('/v1/user')
+            .post('/v2/user')
             .send({
                 username: 'testuser@email.com',
                 password: 'testpassword',
@@ -24,14 +24,14 @@ describe ('Integration tests for /v1/user endpoint', () => {
         authToken = response.headers.authorization;
 
         await request(app)
-            .get('/v1/user/self')
+            .get('/v2/user/self')
             .set('Authorization', authToken)
             .expect(200);
     });
 
     it ('update the account and validate the update', async () => {
         await request(app)
-            .put('/v1/user/self')
+            .put('/v2/user/self')
             .set('Authorization', authToken)
             .send({
                 username: 'testuser@email.com',
@@ -42,7 +42,7 @@ describe ('Integration tests for /v1/user endpoint', () => {
             .expect(204);
 
         const updatedResponse = await request(app)
-            .get('/v1/user/self')
+            .get('/v2/user/self')
             .set('Authorization', authToken) 
             .expect(200);
             
