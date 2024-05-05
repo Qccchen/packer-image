@@ -1,59 +1,56 @@
-# webapp
+# packer-image
+
+This Packer configuration is designed to automate the creation of a custom CentOS image on Google Compute Engine (GCE). This image is tailored for deploying web applications and includes necessary configurations and dependencies.
 
 ## Prerequisites
 
-- Node.js and npm installed.
+Before using this Packer configuration, ensure you have the following:
 
-- MySQL database running locally.
+- Google Cloud Platform (GCP) Account
+- Packer
+- Google Cloud SDK
 
-## Installation
+## Usage
 
-1. Clone the repository:
+### 1. Clone the Repository: 
 
+Clone this repository to your local machine:
+    
 ```bash
-git clone https://github.com/ChenChenChen99/webapp.git
-cd webapp
+git https://github.com/Qccchen/packer-image.git
+cd packer-image
 ```
 
-2. Install dependencies:
+### 2. Update Configuration: 
+
+Modify the Packer template (template.pkr.hcl) to suit your requirements. You may need to adjust variables such as project_id, zone, and ssh_username based on your GCP setup.
+
+### 3. Build the Image:
+ 
+ Run Packer to build the custom CentOS image:
 
 ```bash
-npm install
+packer build centos-nodejs-mysql.pkr.hcl
 ```
 
-3. Set up the MySQL database:
+### 4. Deploy the Image:
 
-- Create a MySQL database named csye6225.
+Once the image is built, it will be available in your GCP project. You can use it to create instances for deploying your web applications.
 
-- Update the MySQL credentials in user.js file if necessary.
+## Customization
 
-4. Start the server:
+### Provisioning: 
 
-```bash
-npm start
-```
+The Packer configuration includes shell scripts to perform provisioning tasks such as updating packages, installing Node.js, creating user groups, deploying web applications, and configuring Google Cloud Operations Agent.
 
-The server should now be running on http://localhost:8080.
+### File Provisioners: 
 
-## Endpoints
+Files required for provisioning, including web application files (webapp) and the Google Cloud Operations Agent configuration file (ops-agent-config.yaml), are included in the Packer build.
 
-- /healthz: Check server health.
+### Post-Processor: 
 
-- POST /v1/user: Create a new user.
-
-- GET /v1/user/self: Get user details (requires authentication).
-
-- PUT /v1/user/self: Update user details (requires authentication).
-
-## Authentication
-
-- The application uses Basic Authentication for user creation and token generation.
-
-- Tokens are required for accessing authenticated endpoints.
+The configuration generates a manifest file (packer-manifest.json) after the build process.
 
 ## Contributors
 
 Qian Chen
-#test
-
-
