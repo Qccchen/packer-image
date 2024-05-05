@@ -42,7 +42,7 @@ app.use('/healthz', (req, res) => {
     logger.warn('Method not allowed for health check');
 });
 
-app.post('/v1/user', async (req, res) => {
+app.post('/v2/user', async (req, res) => {
     try {
         const { username, password, first_name, last_name } = req.body;
         const token = generateToken(username, password);
@@ -74,7 +74,7 @@ app.post('/v1/user', async (req, res) => {
     }
 });
 
-app.get('/v1/user/self', verifyToken, verifyUserStatus, async (req, res) => {
+app.get('/v2/user/self', verifyToken, verifyUserStatus, async (req, res) => {
     try {
         const user = await Users.findByPk(req.id, { attributes: { exclude: ['password'] } });
         if (user) {
@@ -97,7 +97,7 @@ app.get('/v1/user/self', verifyToken, verifyUserStatus, async (req, res) => {
     }
 });
 
-app.put('/v1/user/self', verifyToken, verifyUserStatus, async (req, res) => {
+app.put('/v2/user/self', verifyToken, verifyUserStatus, async (req, res) => {
     try {
         const { first_name, last_name, password, username } = req.body;
         const existingUser = await Users.findOne({ where: { username } });
